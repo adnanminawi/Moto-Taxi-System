@@ -47,8 +47,17 @@ describe('middleware', () => {
     
     const res = await middleware(req)
 
-    
     expect(res.status).toBe(401)
     })
 
+  it('allows a valid driver token on a driver route',async()=>{
+    const driverToken = signToken({ driverId: 1, role: 'driver' })
+    const req = makeRequest('/api/drivers/ride',{driver_token: driverToken})
+
+    const res = await middleware(req)
+
+    expect(res.headers.get('x-middleware-next')).toBe('1')
+
+
+  })
 })
