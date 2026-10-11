@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { middleware } from './middleware'
-import { makeRequest, signToken } from '@/tests/helpers/auth'
+import { makeRequest, signToken, signTamperedToken } from '@/tests/helpers/auth'
 
 describe('middleware', () => {
   it('returns 401 for an API route with no token', async () => {
@@ -29,4 +29,16 @@ describe('middleware', () => {
 
     expect(res.status).toBe(401)
   })
+    it('rejects a token signed with the wrong secret', async () => {
+    
+    const forgedToken = signTamperedToken({ driverId: 1, role: 'driver' })
+    const req = makeRequest('/api/drivers/ride', { driver_token: forgedToken })
+
+    
+    const res = await middleware(req)
+
+    expect(res.status).toBe(401)
+  })
+
+
 })
