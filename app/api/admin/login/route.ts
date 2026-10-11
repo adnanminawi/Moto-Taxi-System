@@ -13,6 +13,10 @@
   export async function POST(req: Request) {
     try {
       const { username, password } = await req.json();
+      
+      if (!username || !password) {
+        return Response.json({ message: "Missing fields" }, { status: 400 });
+      }
 
       const [rows] = await db.query<Admin[]>(
         "SELECT * FROM admin WHERE username = ?",
