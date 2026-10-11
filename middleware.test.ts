@@ -21,4 +21,12 @@ describe('middleware', () => {
 
     expect(res.status).toBe(401)
   })
+  it('admin token on driver api route',async()=>{
+    const adminToken= signToken({adminId: 1, role:'admin'})
+    const req = makeRequest('/api/drivers/ride',{driver_token: adminToken})
+
+    const res = await middleware(req)
+
+    expect(res.status).toBe(401)
+  })
 })
