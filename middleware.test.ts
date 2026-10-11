@@ -57,7 +57,20 @@ describe('middleware', () => {
     const res = await middleware(req)
 
     expect(res.headers.get('x-middleware-next')).toBe('1')
+  })
+  it('redirects a page with no token to its login page', async () => {
+    const req = makeRequest('/driver/dashboard')
 
+    const res = await middleware(req)
 
+    expect(res.status).toBe(307)
+    expect(res.headers.get('location')).toContain('/driver/login')
+  })
+  it('protects customer personal data from requests with no token', async () => {
+    const req = makeRequest('/api/customer')
+
+    const res = await middleware(req)
+
+    expect(res.status).toBe(401)
   })
 })
