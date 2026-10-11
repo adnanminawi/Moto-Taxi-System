@@ -22,10 +22,7 @@ export async function POST(req: Request) {
 
     // Driver not found
     if (!driver) {
-      return Response.json(
-        { error: "Account not found" },
-        { status: 404 }
-      );
+      return Response.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
     // Check password
@@ -35,10 +32,7 @@ export async function POST(req: Request) {
     );
 
     if (!isMatch) {
-      return Response.json(
-        { error: "Invalid password" },
-        { status: 401 }
-      );
+      return Response.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
     const token = jwt.sign(

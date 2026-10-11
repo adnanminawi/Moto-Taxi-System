@@ -2,16 +2,17 @@ import db from "@/lib/db";
 
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
-    try{
-        const [one_cust] = await db.query("SELECT id, name, phone FROM customer Where id =?",
-        [id]);
-        return Response.json({ Customer_Profile : one_cust });
-    }catch(error){
-    return Response.json({error: String(error) }, { status: 500 });
+  const { id } = await params;
+  try {
+    const [one_cust] = await db.query("SELECT id, name, phone FROM customer Where id =?",
+      [id]);
+    return Response.json({ Customer_Profile: one_cust });
+  } catch (error) {
+    console.error(error);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-export async function PUT(request:Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   try {
@@ -26,13 +27,7 @@ export async function PUT(request:Request, { params }: { params: Promise<{ id: s
       message: "Customer updated successfully",
     });
   } catch (error) {
-    return Response.json(
-      {
-        error: String(error),
-      },
-      {
-        status: 500,
-      }
-    );
+    console.error(error);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }

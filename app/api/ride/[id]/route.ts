@@ -8,6 +8,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     [id]);
     return Response.json({ location: loc[0] ?? null });
   } catch (error) {
-    return Response.json({ error: String(error) }, { status: 500 });
-  }
-  }
+    console.error(error);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }}
