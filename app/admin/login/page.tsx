@@ -19,7 +19,7 @@ export default function AdminLogin() {
     const data = {username, password};
     try {
       await login(data);
-      router.push("/admin");
+      window.location.href = "/admin";
     } catch (err: any) {
     setError(err.response?.data?.message || "Invalid username or password");
   } finally {
