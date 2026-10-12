@@ -19,7 +19,7 @@ export async function getDrivers(): Promise <Driver[]> {
     return res.data.drivers;
 }
 export async function createDriver(data :CreateDriver): Promise<{ok: string}> {
-    const res = await api.post<{ok: string}>("/drivers",data);
+    const res = await api.post<{ok: string}>("/admin/drivers",data);
     return res.data;
 }
 export async function login(data: AdminLogin): Promise<AdminLoginResponse> {
