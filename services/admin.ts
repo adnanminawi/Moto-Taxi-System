@@ -15,7 +15,7 @@ export async function updateCustomer(id: number, data: UpdateCustomer): Promise<
   return res.data;
 }
 export async function getDrivers(): Promise <Driver[]> {
-    const res = await api.get<{ drivers: Driver[] }>("/drivers");
+    const res = await api.get<{ drivers: Driver[] }>("/admin/drivers");
     return res.data.drivers;
 }
 export async function createDriver(data :CreateDriver): Promise<{ok: string}> {
