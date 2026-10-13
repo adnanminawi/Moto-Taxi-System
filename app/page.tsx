@@ -47,7 +47,30 @@ export default function Home() {
               <span className={styles.enter}>Continue →</span>
             </Link>
           ))}
+          
         </section>
+        <section className={styles.demo}>
+          <h2 className={styles.demoTitle}>Demo access</h2>
+          <p className={styles.demoNote}>
+            This is a demo with test data. Try it in two browser windows: log in
+            as a driver and go online, then book a ride as a customer.
+          </p>
+
+          <div className={styles.demoGrid}>
+            <div className={styles.demoCard}>
+              <h3>🏍️ Drivers Phone</h3>
+              <p>Adnan: 03816556</p>
+              <p>Ismaeel: 81741454</p>
+              <p>Password: 123</p>
+            </div>
+            <div className={styles.demoCard}>
+              <h3>📊 Admin</h3>
+              <p>Username: admin</p>
+              <p>Password: Admin123</p>
+            </div>
+          </div>
+        </section>
+
       </main>
     </div>
   );
