@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { RowDataPacket } from "mysql2";
 import db from "@/lib/db";
 
-export async function GET( request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
 
@@ -32,14 +32,24 @@ export async function GET( request: NextRequest, { params }: { params: Promise<{
   }
 
   try {
+
     const [rows] = await db.query<RowDataPacket[]>(
       `SELECT d.current_lat, d.current_lng, d.name, d.phone, r.status
        FROM ride r
-       JOIN driver d ON r.driver_id = d.id
-       WHERE r.id = ? AND r.status IN ('assigned', 'en_route')`,
+       left JOIN driver d ON r.driver_id = d.id
+       WHERE r.id = ?`,
       [rideId]
     );
-    return NextResponse.json({ location: rows[0] ?? null });
+    const ride = rows[0];
+    if (!ride) {
+      return NextResponse.json({ error: "Ride not found" }, { status: 404 });
+    }
+    const inProgress = ride.status === "assigned" || ride.status === "en_route";
+
+    return NextResponse.json({
+      status: ride.status, driver: inProgress ?
+        { name: ride.name, phone: ride.phone, current_lat: ride.current_lat, current_lng: ride.current_lng, } : null,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ message: "Something went wrong." }, { status: 500 });
