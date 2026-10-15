@@ -1,6 +1,9 @@
 import db from "@/lib/db";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { findNearestDriver } from "@/lib/findNearestDriver";
+import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
 async function getAddress(lat: number, lng: number) {
   try{
     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
@@ -54,13 +57,28 @@ const destination_address = await getAddress(destination_lat, destination_lng);
     const [driv] = await db.query<RowDataPacket[]>("SELECT d.name, d.phone FROM ride r JOIN driver d ON driver_id=d.id WHERE r.id=?",
       [rideId]);
 
-    return Response.json(
+      const rideToken = jwt.sign(
+      { rideId, role: "customer" },
+      process.env.JWT_SECRET!,
+      { expiresIn: "1d" }
+    );
+
+    const res = NextResponse.json(
       { ok: true, driver: driv[0] ?? null, rideId, assignedDriver: driver?.id ?? null },
       { status: 201 }
     );
-  }catch (error) {
-  console.error(error);
-  return Response.json({ message: "Something went wrong." }, { status: 500 });
-}
 
+    res.cookies.set("ride_token", rideToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24,
+    });
+
+    return res;
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ message: "Something went wrong." }, { status: 500 });
+  }
 }
