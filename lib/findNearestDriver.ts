@@ -4,7 +4,7 @@ import { RowDataPacket } from "mysql2";
 
 export async function findNearestDriver(pickupLat: number, pickupLng: number, excludeIds: number[] = []) {
   const [drivers] = await db.query<RowDataPacket[]>(
-    "SELECT id, current_lat, current_lng FROM driver WHERE status = 'online' AND current_lat IS NOT NULL"
+    "SELECT id, current_lat, current_lng FROM driver WHERE status = 'online' AND current_lat IS NOT NULL AND last_location_update > NOW() - INTERVAL 60 SECOND"
   );
 
   let nearest = null;

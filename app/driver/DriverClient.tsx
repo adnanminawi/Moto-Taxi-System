@@ -98,16 +98,7 @@ export default function DriverClient() {
   window.location.href = "/driver/login";   // send them to login
 } 
 
-  useEffect(() => {
-    if (!rideRequest) return;
-
-    const timer = setTimeout(() => {
-      console.log("Ride expired (auto reject)");
-      setRideRequest(null);
-    }, 30000);
-
-    return () => clearTimeout(timer);
-  }, [rideRequest]);
+  
 
  // target answers one question Where should the driver be heading right now
   const target = activeRide ? activeRide.status === "en_route" ? activeRide.destination : activeRide.pickup : null;

@@ -11,6 +11,8 @@ type RidePopupProps = {
 
 export default function RidePopup({ setRideRequest }: RidePopupProps) {
   useEffect(() => {
+    console.log("[RidePopup] mounted");
+
     let lastRideId: number | null = null;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
@@ -28,16 +30,20 @@ export default function RidePopup({ setRideRequest }: RidePopupProps) {
         });
 
         if (timeoutId) clearTimeout(timeoutId);
+        console.log("[RidePopup] timer started for ride", ride.id);
+
         timeoutId = setTimeout(async () => {
+          console.log("[RidePopup] 30s passed, rejecting ride", ride.id);
           try {
             await rideService({ action: "reject", rideId: ride.id });
+            console.log("[RidePopup] reject sent for ride", ride.id);
           } catch (err) {
-            console.error("Auto-reject failed:", err);
+            console.error("[RidePopup] auto-reject failed:", err);
           }
           setRideRequest(null);
         }, 30000);
       } catch (err) {
-        console.error("RidePopup error:", err);
+        console.error("[RidePopup] poll error:", err);
       }
     }
 
@@ -45,6 +51,7 @@ export default function RidePopup({ setRideRequest }: RidePopupProps) {
     const interval = setInterval(checkRide, 3000);
 
     return () => {
+      console.log("[RidePopup] cleanup — timer cleared");
       clearInterval(interval);
       if (timeoutId) clearTimeout(timeoutId);
     };
