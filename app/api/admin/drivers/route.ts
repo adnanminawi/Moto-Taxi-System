@@ -33,9 +33,12 @@ export async function POST(request: Request) {
       [name, phone, password_hash, 'offline']
     );
     return Response.json({ ok: true }, { status: 201 })
-  } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error: any) {
+  if (error.code === "ER_DUP_ENTRY") {
+    return Response.json({ message: "Phone already exists." }, { status: 409 });
   }
+  console.error(error);
+  return Response.json({ message: "Something went wrong." }, { status: 500 });
+}
 }
 

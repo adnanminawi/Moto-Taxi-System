@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getDrivers } from "@/services/admin";
+import { getDrivers, deleteDriver } from "@/services/admin";
 import Link from "next/link";
 import { Driver } from "@/types";
+
 
 export default function DriversPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -35,7 +36,15 @@ export default function DriversPage() {
         return "text-gray-500";
     }
   };
-
+async function handleDelete(id: number) {
+  if (!confirm("Delete this driver? Their past rides are kept but unlinked.")) return;
+  try {
+    await deleteDriver(id);
+    setDrivers((prev) => prev.filter((d) => d.id !== id));
+  } catch (err: any) {
+    alert(err.response?.data?.message ?? "Failed to delete driver");
+  }
+}
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="flex justify-between items-center mb-6">
@@ -78,9 +87,12 @@ export default function DriversPage() {
                     >
                       View
                     </Link>
-                    <button className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
-                      Delete
-                    </button>
+                    <button
+  onClick={() => handleDelete(driver.id)}
+  className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+>
+  Delete
+</button>
                   </td>
                 </tr>
               ))}
