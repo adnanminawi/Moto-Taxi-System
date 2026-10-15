@@ -147,3 +147,12 @@ export type OnlineDriver = {
   current_lat: string;
   current_lng: string;
 };
+export type RideTracking = {
+  status: "searching" | "assigned" | "en_route" | "completed" | "cancelled" | "no_driver_found";
+  driver: {
+    name: string;
+    phone: string;
+    current_lat: number;
+    current_lng: number;
+  } | null;
+};

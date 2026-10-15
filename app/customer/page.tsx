@@ -1,9 +1,20 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
-import { fetchRideLocation, createRide } from "@/services/customer";
-import { DriverLocation } from "@/types";
+import { use, useEffect, useState } from "react";
+import { fetchRideTracking, createRide } from "@/services/customer";
+import { RideTracking } from "@/types";
 const Map = dynamic(() => import("@/components/CustomerMap"), { ssr: false });
+
+const FINAL_STATUSES: RideTracking["status"][] = ["completed", "cancelled", "no_driver_found"];
+
+const STATUS_TEXT: Record<RideTracking["status"], string> = {
+  searching: "Finding your driver…",
+  assigned: "Your driver accepted and is on the way",
+  en_route: "On the way to your destination",
+  completed: "Ride completed — thank you!",
+  cancelled: "Ride cancelled",
+  no_driver_found: "No driver available, please try again.",
+};
 
 export default function Page() {
   const [name, setName] = useState("");
@@ -11,34 +22,32 @@ export default function Page() {
   const [pickup, setPickup] = useState<{ lat: number; lng: number } | null>(null);
   const [destination, setDestination] = useState<{ lat: number; lng: number } | null>(null);
   const [rideId, setRideId] = useState<number | null>(null);
-  const [driverLocation, setDriverLocation] = useState<DriverLocation| null>(null);
-  const [driverInfo, setDriverInfo]= useState<{ Name: string; Phone: string }>({ Name: "", Phone: "" });
-  const [noDriver, setNoDriver] = useState(false);
+  const [tracking, setTracking] = useState<RideTracking | null>(null);
 
   useEffect(() => {
     if (!rideId) return;
-    const id = rideId
-    async function loadLocation (){
-      const data = await fetchRideLocation(id);
-      setDriverLocation(data);
-      if (data) {
-        setDriverInfo({ Name: data.name, Phone: data.phone });
-      }   
-      else {
-        setDriverInfo({ Name: "", Phone: "" });  
+    const id = rideId;
+
+    const interval = setInterval(load, 10000);
+    load();
+    async function load() {
+      try {
+        const data = await fetchRideTracking(id);
+        setTracking(data);
+        if (FINAL_STATUSES.includes(data.status)) clearInterval(interval);
+      } catch (err) {
+        console.error("Tracking failed:", err);
       }
-    };
-    loadLocation();
-    const interval = setInterval(loadLocation , 10000);
+    }
     return () => clearInterval(interval);
   }, [rideId]);
 
 
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!pickup || !destination) return;
 
-    const data ={
+    const data = {
       name,
       phone,
       pickup_lat: pickup.lat,
@@ -46,28 +55,24 @@ export default function Page() {
       destination_lat: destination.lat,
       destination_lng: destination.lng,
     };
-    async function Submit(){
-      try{
+      try {
         const s = await createRide(data);
         setRideId(s.rideId);
-        setNoDriver(s.assignedDriver === null);
-      }catch (error){
+        setTracking({ status: s.assignedDriver === null ? "no_driver_found" : "searching", driver: null,});
+      } catch (error) {
         console.log(error);
-        alert ("Failed to book");
+        alert("Failed to book");
       }
-    }
-    Submit();
   }
 
   function reset() {
     setPickup(null);
     setDestination(null);
-    setDriverLocation(null);
     setRideId(null);
-    setNoDriver(false);
+    setTracking(null);
   }
 
-  return (
+ return (
     <div className="flex h-screen font-sans text-[#222]">
       <div className="w-80 bg-white p-5 flex flex-col gap-4 border-r border-gray-300">
         <div className="bg-[#f7f7f7] p-4 rounded-[10px] border border-[#e3e3e3]">
@@ -91,7 +96,9 @@ export default function Page() {
         <div className="bg-[#f7f7f7] p-4 rounded-[10px] border border-[#e3e3e3]">
           <h3 className="text-[13px] font-semibold text-gray-500 mb-1.5">Trip</h3>
           <p className="text-sm text-gray-700 my-1">Pickup: {pickup ? "Selected" : "Click on map"}</p>
-          <p className="text-sm text-gray-700 my-1">Destination: {destination ? "Selected" : "Click on map"}</p>
+          <p className="text-sm text-gray-700 my-1">
+            Destination: {destination ? "Selected" : "Click on map"}
+          </p>
         </div>
 
         <button
@@ -106,19 +113,25 @@ export default function Page() {
         >
           Reset
         </button>
-        {noDriver && <p className="text-red-500 text-sm">No driver available, please try again.</p>}
 
-        
-{rideId && !noDriver && driverInfo.Name && (
-        <div className="absolute top-5 left-1/2 -translate-x-1/2 bg-white p-4 rounded-xl w-[280px] z-[1000] shadow-lg border-l-4 border-[#f4c542]">
-            <h3 className="text-[15px] font-bold mb-2">🚨 Driver Info</h3>
-            <p className="text-[13px] text-gray-600 my-1">Driver Name: {driverInfo.Name} {}</p>
-            <p className="text-[13px] text-gray-600 my-1">Phone: {driverInfo.Phone}</p>
-      </div>)}
-       </div>
+        {tracking && (
+          <div className="absolute top-5 left-1/2 -translate-x-1/2 bg-white p-4 rounded-xl w-[280px] z-[1000] shadow-lg border-l-4 border-[#f4c542]">
+            <h3 className="text-[15px] font-bold mb-2">{STATUS_TEXT[tracking.status]}</h3>
 
-      
-           
+            {tracking.status === "searching" && (
+              <p className="text-[13px] text-gray-600">Waiting for a driver to accept your ride…</p>
+            )}
+
+            {tracking.driver && (
+              <>
+                <p className="text-[13px] text-gray-600 my-1">Driver: {tracking.driver.name}</p>
+                <p className="text-[13px] text-gray-600 my-1">Phone: {tracking.driver.phone}</p>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="flex-1 h-full relative overflow-hidden bg-[#dcdcdc]">
         <Map
           setPickup={setPickup}
@@ -126,13 +139,12 @@ export default function Page() {
           pickup={pickup}
           destination={destination}
           driverLocation={
-            driverLocation
-              ? { lat: Number(driverLocation.current_lat), lng: Number(driverLocation.current_lng) }
+            tracking?.driver
+              ? { lat: tracking.driver.current_lat, lng: tracking.driver.current_lng }
               : null
           }
         />
       </div>
-      
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import api from "./axios";
-import {  type DriverLocation, type CreateRide, type RideResult } from "@/types";
+import {  type RideTracking, type CreateRide, type RideResult } from "@/types";
 
 
-export async function fetchRideLocation(rideId :number): Promise<DriverLocation >{
-    const res = await api.get<{location: DriverLocation }>(`/ride/${rideId}`);
-    return res.data.location;
+export async function fetchRideTracking(rideId :number): Promise<RideTracking >{
+    const res = await api.get<RideTracking>(`/ride/${rideId}`);
+    return res.data;
 
 }
 

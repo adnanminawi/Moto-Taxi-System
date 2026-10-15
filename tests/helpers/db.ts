@@ -30,22 +30,19 @@ type DriverOptions = {
   status?: string
   lat?: number
   lng?: number
-  stale?: boolean
 }
 
 export async function createDriver(options: DriverOptions = {}): Promise<number> {
   const status = options.status ?? 'online'
   const lat = options.lat ?? 33.8938
   const lng = options.lng ?? 35.5018
-  const lastUpdate = options.stale ? 'NOW() - INTERVAL 5 MINUTE' : 'NOW()'
 
   seq++
 
   const [result] = await db.query<ResultSetHeader>(
-  `INSERT INTO driver (name, phone, password_hash, status, current_lat, current_lng, last_location_update)
-   VALUES (?, ?, ?, ?, ?, ?, ${lastUpdate})`,
-  [`Driver ${seq}`, `7000${seq}`, 'not-a-real-hash', status, lat, lng]
-)
+    'INSERT INTO driver (name, phone, password_hash, status, current_lat, current_lng) VALUES (?, ?, ?, ?, ?, ?)',
+    [`Driver ${seq}`, `7000${seq}`, 'not-a-real-hash', status, lat, lng]
+  )
 
   return result.insertId
 }
