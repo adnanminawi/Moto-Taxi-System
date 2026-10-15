@@ -46,6 +46,10 @@ export async function getOnlineDrivers(): Promise<OnlineDriver[]> {
   const res = await api.get<{ drivers: OnlineDriver[] }>("/admin/online");
   return res.data.drivers;
 }
+export async function deleteDriver(id: number): Promise<{ message: string }> {
+  const res = await api.delete<{ message: string }>(`/admin/drivers/${id}`);
+  return res.data;
+}
 export async function logout() {
   const res = await api.post("/admin/logout");
   return res.data;

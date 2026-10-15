@@ -1,0 +1,1 @@
+export const PROTECTED_DRIVER_PHONES = ["03816556", "81741454"];
