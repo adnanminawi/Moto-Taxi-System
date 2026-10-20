@@ -73,8 +73,9 @@ export default function Page() {
   }
 
  return (
-    <div className="flex h-screen font-sans text-[#222]">
-      <div className="w-80 bg-white p-5 flex flex-col gap-4 border-r border-gray-300">
+    <div className="flex h-[100dvh] flex-col md:flex-row font-sans text-[#222]">
+      {/* form — below the map on phones, left sidebar on desktop */}
+      <div className="order-2 md:order-1 w-full md:w-80 shrink-0 max-h-[45dvh] md:max-h-none overflow-y-auto bg-white p-5 flex flex-col gap-4 border-t md:border-t-0 md:border-r border-gray-300">
         <div className="bg-[#f7f7f7] p-4 rounded-[10px] border border-[#e3e3e3]">
           <h3 className="text-[13px] font-semibold text-gray-500 mb-1.5">Book a Ride</h3>
           <div className="flex flex-col gap-3">
@@ -89,15 +90,16 @@ export default function Page() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Phone"
+              inputMode="tel"
             />
           </div>
         </div>
 
         <div className="bg-[#f7f7f7] p-4 rounded-[10px] border border-[#e3e3e3]">
           <h3 className="text-[13px] font-semibold text-gray-500 mb-1.5">Trip</h3>
-          <p className="text-sm text-gray-700 my-1">Pickup: {pickup ? "Selected" : "Click on map"}</p>
+          <p className="text-sm text-gray-700 my-1">Pickup: {pickup ? "Selected" : "Choose on map"}</p>
           <p className="text-sm text-gray-700 my-1">
-            Destination: {destination ? "Selected" : "Click on map"}
+            Destination: {destination ? "Selected" : "Choose on map"}
           </p>
         </div>
 
@@ -113,9 +115,12 @@ export default function Page() {
         >
           Reset
         </button>
+      </div>
 
+      {/* map — on top on phones, right side on desktop */}
+      <div className="order-1 md:order-2 flex-1 min-h-0 relative overflow-hidden bg-[#dcdcdc]">
         {tracking && (
-          <div className="absolute top-5 left-1/2 -translate-x-1/2 bg-white p-4 rounded-xl w-[280px] z-[1000] shadow-lg border-l-4 border-[#f4c542]">
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] max-w-[300px] bg-white p-4 rounded-xl z-[1000] shadow-lg border-l-4 border-[#f4c542]">
             <h3 className="text-[15px] font-bold mb-2">{STATUS_TEXT[tracking.status]}</h3>
 
             {tracking.status === "searching" && (
@@ -130,9 +135,7 @@ export default function Page() {
             )}
           </div>
         )}
-      </div>
 
-      <div className="flex-1 h-full relative overflow-hidden bg-[#dcdcdc]">
         <Map
           setPickup={setPickup}
           setDestination={setDestination}
