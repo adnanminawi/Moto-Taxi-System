@@ -1,1 +1,8 @@
-export const PROTECTED_DRIVER_PHONES = ["03816556", "81741454"];
+export const DEMO = {
+  drivers: ["70000001", "70000002"],
+  driverPassword: "123",
+  adminUsername: "demo_admin",
+  adminPassword: "Demo123",
+};
+
+export const PROTECTED_DRIVER_PHONES = DEMO.drivers;
