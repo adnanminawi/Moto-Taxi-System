@@ -156,3 +156,8 @@ export type RideTracking = {
     current_lng: number;
   } | null;
 };
+export type DriverDetails = {
+  driver_Profile: Driver[];   // the endpoint returns the row array
+  rides: DriverRide[];
+  totalRides: number;
+};
