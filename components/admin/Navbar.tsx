@@ -6,7 +6,7 @@ import { LogOut } from "lucide-react";
 import { logout } from "@/services/admin";
 import { ADMIN_MENU, isActive, adminLogout } from "./Menu";
 
-export default function Navbar() {
+export default function Navbar() {  
   const pathname = usePathname();
 
   return (
