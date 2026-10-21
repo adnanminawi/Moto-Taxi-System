@@ -64,7 +64,7 @@ export async function rejectRide(rideId: number, driverId: number): Promise<Reje
     const nextDriver = await findNearestDriver(ride.pickup_lat, ride.pickup_lng, rejected);
 
     if (nextDriver) {
-        await db.query("UPDATE ride SET driver_id = ? WHERE id = ?", [nextDriver.id, rideId]);
+        await db.query("UPDATE ride SET driver_id = ?, offered_at = NOW() WHERE id = ?", [nextDriver.id, rideId]);
     } else {
         await db.query("UPDATE ride SET driver_id = NULL, status = 'no_driver_found' WHERE id = ?", [rideId]);
     }

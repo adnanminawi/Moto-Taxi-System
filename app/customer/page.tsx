@@ -22,6 +22,7 @@ export default function Page() {
   const [pickup, setPickup] = useState<{ lat: number; lng: number } | null>(null);
   const [destination, setDestination] = useState<{ lat: number; lng: number } | null>(null);
   const [rideId, setRideId] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [tracking, setTracking] = useState<RideTracking | null>(null);
 
   useEffect(() => {
@@ -45,7 +46,8 @@ export default function Page() {
 
 
   async function handleSubmit() {
-    if (!pickup || !destination) return;
+    if (!pickup || !destination || submitting) return;
+    setSubmitting(true);
 
     const data = {
       name,
@@ -55,14 +57,16 @@ export default function Page() {
       destination_lat: destination.lat,
       destination_lng: destination.lng,
     };
-      try {
-        const s = await createRide(data);
-        setRideId(s.rideId);
-        setTracking({ status: s.assignedDriver === null ? "no_driver_found" : "searching", driver: null,});
-      } catch (error) {
-        console.log(error);
-        alert("Failed to book");
-      }
+    try {
+      const s = await createRide(data);
+      setRideId(s.rideId);
+      setTracking({ status: s.assignedDriver === null ? "no_driver_found" : "searching", driver: null, });
+    } catch (error) {
+      console.log(error);
+      alert("Failed to book");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function reset() {
@@ -72,7 +76,7 @@ export default function Page() {
     setTracking(null);
   }
 
- return (
+  return (
     <div className="flex h-[100dvh] flex-col md:flex-row font-sans text-[#222]">
       {/* form — below the map on phones, left sidebar on desktop */}
       <div className="order-2 md:order-1 w-full md:w-80 shrink-0 max-h-[45dvh] md:max-h-none overflow-y-auto bg-white p-5 flex flex-col gap-4 border-t md:border-t-0 md:border-r border-gray-300">
@@ -103,11 +107,20 @@ export default function Page() {
           </p>
         </div>
 
+
         <button
-          className="w-full py-2.5 bg-[#f4c542] hover:bg-[#e6b93c] font-semibold text-sm cursor-pointer rounded-md text-black transition"
           onClick={handleSubmit}
+          disabled={submitting || (tracking !== null && !FINAL_STATUSES.includes(tracking.status))}
+          className="flex w-full items-center justify-center gap-2 py-2.5 rounded-md bg-[#f4c542] text-sm font-semibold text-black cursor-pointer transition
+             hover:bg-[#e6b93c]
+             active:scale-95 active:bg-[#d9a92e]
+             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f4c542] focus-visible:ring-offset-2
+             disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
         >
-          Request Ride
+          {submitting && (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+          )}
+          {submitting ? "Requesting…" : "Request Ride"}
         </button>
         <button
           className="w-full py-2.5 bg-[#e0e0e0] font-semibold text-sm cursor-pointer rounded-md text-black"

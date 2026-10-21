@@ -38,7 +38,8 @@ export async function POST(req: Request) {
     }
 
     // Assign/change the driver
-    await db.query("UPDATE ride SET driver_id=? WHERE id =?",
+    await db.query(
+      "UPDATE ride SET driver_id = ?, status = 'searching', offered_at = NOW() WHERE id = ?",
       [driverId, rideId]
     );
 
