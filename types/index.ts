@@ -15,7 +15,6 @@ export type CreateRide = {
 
 export type RideResult = {
   ok: boolean;
-  driver: { name: string; phone: string } | null;
   rideId: number;
   assignedDriver: number | null;
 }

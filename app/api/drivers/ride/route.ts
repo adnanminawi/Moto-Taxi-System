@@ -2,7 +2,7 @@ import db from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import { getDriverId } from "@/lib/getDriverId";
 import { acceptRide, markArrived, completeRide, rejectRide } from "@/lib/rides";
-
+import { expireOffers } from "@/lib/expireOffers";
 
 
 export async function GET() {
@@ -10,6 +10,7 @@ export async function GET() {
   if (!driverId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+   await expireOffers();
 
   try {
     const [rides] = await db.query<RowDataPacket[]>(
