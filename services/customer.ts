@@ -13,3 +13,7 @@ export async function createRide(data : CreateRide): Promise<RideResult>{
     return res.data;
     
 }
+
+export async function cancelRide(rideId: number): Promise<void> {
+  await api.patch(`/ride/${rideId}`);
+}
