@@ -2,15 +2,17 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { driverSession, setStatus, rideService, logout } from "@/services/driver";
-import type { Driver, RideAction, RideRequest } from "@/types";
+import type { Driver, RideAction, RideRequest, RidePoint } from "@/types";
 import GPSStream from "@/components/GPSStream";
 import RidePopup from "@/components/RidePopup";
 
 const Map = dynamic(() => import("@/components/DriverMap"), { ssr: false });
 
-// shared size for both popups: fits small phones, 300px max on larger screens
-const POPUP =
-  "absolute top-3 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] max-w-[300px] bg-white p-4 rounded-xl z-[1000] shadow-lg border-l-4 border-[#f4c542]";
+const OFFER_SECONDS = 30;
+
+// opens Google Maps (app on phones) with directions to the point
+const navigateUrl = (p: RidePoint) =>
+  `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=driving`;
 
 export default function DriverClient() {
   const [rideRequest, setRideRequest] = useState<RideRequest | null>(null);
@@ -18,6 +20,9 @@ export default function DriverClient() {
   const [isOnline, setIsOnline] = useState(false);
   const [activeRide, setActiveRide] = useState<RideRequest | null>(null);
   const [totalRides, setTotalRides] = useState(0);
+  const [secondsLeft, setSecondsLeft] = useState(OFFER_SECONDS);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     async function fetchDriver() {
@@ -33,6 +38,35 @@ export default function DriverClient() {
     fetchDriver();
   }, []);
 
+  // countdown shown on the request card (the real 30s reject stays in RidePopup + server)
+  const requestId = rideRequest?.id ?? null;
+  useEffect(() => {
+    if (requestId === null) return;
+    setSecondsLeft(OFFER_SECONDS);
+    const timer = setInterval(() => setSecondsLeft((s) => Math.max(s - 1, 0)), 1000);
+    return () => clearInterval(timer);
+  }, [requestId]);
+
+  // customer can cancel while we're going to pickup.
+  // the cancel route sets the driver back to "online", so if our status
+  // turns "online" during an assigned ride, the ride was cancelled.
+  const goingToPickup = activeRide?.status === "assigned";
+  useEffect(() => {
+    if (!goingToPickup) return;
+    const timer = setInterval(async () => {
+      try {
+        const data = await driverSession();
+        if (data.driver?.status === "online") {
+          setActiveRide(null);
+          setMessage("The customer cancelled the ride.");
+        }
+      } catch (err) {
+        console.error("Status check failed:", err);
+      }
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [goingToPickup]);
+
   async function toggleStatus() {
     if (!driver) return;
     const newStatus = isOnline ? "offline" : "online";
@@ -40,6 +74,7 @@ export default function DriverClient() {
       await setStatus(newStatus);
       setIsOnline(newStatus === "online");
       setDriver((prev) => (prev ? { ...prev, status: newStatus } : prev));
+      setMessage("");
     } catch (err) {
       console.error("Error updating status:", err);
     }
@@ -51,10 +86,12 @@ export default function DriverClient() {
     try {
       await rideService(d);
       setActiveRide({ ...rideRequest, status: "assigned" });
-      setRideRequest(null);
-    } catch (err) {
-      console.error("Failed to accept ride:", err);
+      setMessage("");
+    } catch (err: any) {
+      // e.g. the offer expired on the server just before we tapped
+      setMessage(err.response?.data?.message ?? "This ride is no longer available.");
     }
+    setRideRequest(null);
   }
 
   async function rejectRide() {
@@ -74,8 +111,8 @@ export default function DriverClient() {
     try {
       await rideService(d);
       setActiveRide((prev) => (prev ? { ...prev, status: "en_route" } : prev));
-    } catch (err) {
-      console.error("Failed to mark arrived:", err);
+    } catch (err: any) {
+      setMessage(err.response?.data?.message ?? "Couldn't update the ride.");
     }
   }
 
@@ -87,8 +124,9 @@ export default function DriverClient() {
       setActiveRide(null);
       setIsOnline(true);
       setDriver((prev) => (prev ? { ...prev, status: "online" } : prev));
-    } catch (err) {
-      console.error("Failed to complete ride:", err);
+      setTotalRides((n) => n + 1);
+    } catch (err: any) {
+      setMessage(err.response?.data?.message ?? "Couldn't complete the ride.");
     }
   }
 
@@ -107,83 +145,263 @@ export default function DriverClient() {
       : activeRide.pickup
     : null;
 
+  // the ride shown on the map: an accepted ride, or a request we're looking at
+  const shownRide = activeRide ?? rideRequest;
+
+  // which panel to show
+  const view = activeRide
+    ? activeRide.status === "en_route"
+      ? "trip"
+      : "pickup"
+    : rideRequest
+    ? "request"
+    : isOnline
+    ? "waiting"
+    : "offline";
+
   return (
-    <div className="flex h-[calc(100dvh-60px)] flex-col md:flex-row">
-      {/* controls — below the map on phones, left sidebar on desktop */}
-      <div className="order-2 md:order-1 w-full md:w-80 shrink-0 max-h-[45dvh] md:max-h-none overflow-y-auto bg-white p-5 flex flex-col gap-4 border-t md:border-t-0 md:border-r border-gray-300">
-        <GPSStream driverId={driver?.id} isActive={isOnline} />
-        {isOnline && !activeRide && <RidePopup setRideRequest={setRideRequest} />}
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-[#eef0ea] text-[#111] font-sans">
+      <GPSStream driverId={driver?.id} isActive={isOnline} />
+      {isOnline && !activeRide && <RidePopup setRideRequest={setRideRequest} />}
 
-        <div className="bg-[#f7f7f7] p-4 rounded-[10px] border border-[#e3e3e3]">
-          <h3 className="text-[13px] font-semibold text-gray-500 mb-1.5">Driver Info</h3>
-          <p className="text-sm text-gray-700 my-1">Name: {driver?.name || "Loading..."}</p>
-          <p className="text-sm text-gray-700 my-1">Phone: {driver?.phone || "Loading..."}</p>
-        </div>
-
-        <div className="bg-[#f7f7f7] p-4 rounded-[10px] border border-[#e3e3e3]">
-          <h3 className="text-[13px] font-semibold text-gray-500 mb-1.5">Status</h3>
-          <button
-            className="w-full py-2.5 bg-[#f4c542] hover:bg-[#e6b93c] font-semibold text-sm cursor-pointer rounded-md text-black transition"
-            onClick={toggleStatus}
-          >
-            {isOnline ? "Go Offline" : "Go Online"}
-          </button>
-        </div>
-
-        <div className="bg-[#f7f7f7] p-4 rounded-[10px] border border-[#e3e3e3]">
-          <h3 className="text-[13px] font-semibold text-gray-500 mb-1.5">Total Rides</h3>
-          <h2 className="text-[22px] font-bold text-gray-900">{totalRides}</h2>
-        </div>
-
-        <button
-          className="w-full py-2.5 bg-[#e0e0e0] font-semibold text-sm cursor-pointer rounded-md text-black"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
+      {/* map fills the screen */}
+      <div className="absolute inset-0">
+        <Map
+          driverLocation={{ lat: driver?.current_lat, lng: driver?.current_lng }}
+          pickup={shownRide && activeRide?.status !== "en_route" ? shownRide.pickup : null}
+          destination={shownRide ? shownRide.destination : null}
+          target={target}
+        />
       </div>
 
-      {/* map — on top on phones, right side on desktop */}
-      <div className="order-1 md:order-2 flex-1 min-h-0 w-full relative overflow-hidden bg-[#dcdcdc]">
-        {rideRequest && (
-          <div className={POPUP}>
-            <h3 className="text-[15px] font-bold mb-2">🚨 New Ride Request</h3>
-            <p className="text-[13px] text-gray-600 my-1">Customer: {rideRequest.customer.name}</p>
-            <p className="text-[13px] text-gray-600 my-1">Phone: {rideRequest.customer.phone}</p>
-            <p className="text-[13px] text-gray-600 my-1">Pickup: {rideRequest.pickup.address}</p>
-            <p className="text-[13px] text-gray-600 my-1">Destination: {rideRequest.destination.address}</p>
-            <div className="flex mt-2.5 gap-2.5">
-              <button className="flex-1 bg-[#f4c542] p-2 rounded-md font-semibold cursor-pointer" onClick={acceptRide}>
-                Accept
+      {/* top bar: online switch + menu */}
+      <div className="absolute inset-x-4 top-4 z-[1000] flex items-start justify-between md:inset-x-6">
+        <button
+          onClick={toggleStatus}
+          disabled={!driver || !!activeRide}
+          className="flex items-center gap-2.5 rounded-full bg-white py-2 pl-4 pr-2 text-[15px] font-extrabold shadow-md cursor-pointer disabled:cursor-not-allowed"
+        >
+          <span className={`h-2.5 w-2.5 rounded-full ${isOnline ? "bg-green-600 ring-4 ring-green-100" : "bg-gray-400"}`} />
+          {isOnline ? "Online" : "Offline"}
+          <span className={`relative h-6 w-11 rounded-full transition ${isOnline ? "bg-green-600" : "bg-gray-300"}`}>
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${isOnline ? "right-0.5" : "left-0.5"}`}
+            />
+          </span>
+        </button>
+
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Menu"
+            className="grid h-11 w-11 place-items-center rounded-full bg-white text-lg shadow-md cursor-pointer"
+          >
+            ☰
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white p-4 shadow-lg">
+              <p className="font-bold">{driver?.name ?? "Loading…"}</p>
+              <p className="text-xs text-gray-500">{driver?.phone}</p>
+              <p className="mt-3 text-sm text-gray-600">
+                Total rides: <span className="font-bold text-gray-900">{totalRides}</span>
+              </p>
+              <button
+                onClick={handleLogout}
+                className="mt-3 w-full rounded-xl bg-gray-100 py-2 text-sm font-semibold cursor-pointer hover:bg-gray-200"
+              >
+                Logout
               </button>
-              <button className="flex-1 bg-[#e0e0e0] p-2 rounded-md font-semibold cursor-pointer" onClick={rejectRide}>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* panel: bottom sheet on phones, floating card on desktop */}
+      <div className="absolute inset-x-0 bottom-0 z-[1000] max-h-[65%] overflow-y-auto rounded-t-3xl bg-white px-5 pb-6 pt-3 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] md:inset-x-auto md:bottom-auto md:left-6 md:top-20 md:w-[390px] md:rounded-3xl md:pt-5 md:shadow-[0_12px_40px_rgba(0,0,0,0.16)]">
+        <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-gray-200 md:hidden" />
+
+        {message && <p className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">{message}</p>}
+
+        {/* ---------- offline ---------- */}
+        {view === "offline" && (
+          <>
+            <h2 className="text-[22px] font-extrabold tracking-tight">You're offline</h2>
+            <p className="mb-4 text-sm text-gray-500">Go online to start getting rides.</p>
+            <button
+              onClick={toggleStatus}
+              disabled={!driver}
+              className="h-14 w-full rounded-2xl bg-[#f4c542] text-base font-extrabold cursor-pointer hover:bg-[#e6b93c] disabled:opacity-60"
+            >
+              Go online
+            </button>
+          </>
+        )}
+
+        {/* ---------- online, waiting ---------- */}
+        {view === "waiting" && (
+          <>
+            <h2 className="flex items-center gap-2 text-[22px] font-extrabold tracking-tight">
+              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-green-600" />
+              Looking for rides…
+            </h2>
+            <p className="mb-4 text-sm text-gray-500">Requests will pop up here.</p>
+            <div className="rounded-2xl border border-gray-200 bg-[#f7f7f5] px-4 py-3">
+              <p className="text-[11px] font-semibold text-gray-500">Total rides</p>
+              <p className="text-[22px] font-extrabold">{totalRides}</p>
+            </div>
+            <button
+              onClick={toggleStatus}
+              className="mt-4 h-12 w-full rounded-2xl border border-gray-200 text-[15px] font-bold cursor-pointer hover:bg-gray-50"
+            >
+              Go offline
+            </button>
+          </>
+        )}
+
+        {/* ---------- new request ---------- */}
+        {view === "request" && rideRequest && (
+          <>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-[22px] font-extrabold tracking-tight">New ride request</h2>
+              <Countdown secondsLeft={secondsLeft} />
+            </div>
+            <Trip pickup={rideRequest.pickup} destination={rideRequest.destination} />
+            <p className="mt-3 text-sm text-gray-600">
+              Customer: <span className="font-semibold text-gray-900">{rideRequest.customer.name}</span>
+            </p>
+            <div className="mt-4 flex gap-2.5">
+              <button
+                onClick={rejectRide}
+                className="h-14 flex-1 rounded-2xl bg-gray-100 text-[15px] font-bold text-gray-700 cursor-pointer hover:bg-gray-200"
+              >
                 Reject
               </button>
+              <button
+                onClick={acceptRide}
+                className="h-14 flex-[2] rounded-2xl bg-green-600 text-[17px] font-extrabold text-white cursor-pointer hover:bg-green-700"
+              >
+                Accept
+              </button>
             </div>
-          </div>
+          </>
         )}
 
-        {activeRide && (
-          <div className={POPUP}>
-            <h3 className="text-[15px] font-bold mb-2">Current Ride</h3>
-            <p className="text-[13px] text-gray-600 my-1">Pickup: {activeRide.pickup.address}</p>
-            <p className="text-[13px] text-gray-600 my-1">Destination: {activeRide.destination.address}</p>
-            <div className="mt-4 flex">
-              {activeRide.status === "assigned" ? (
-                <button className="flex-1 bg-[#f4c542] p-2 rounded-md font-semibold cursor-pointer" onClick={arrivedAtPickup}>
-                  Arrived
-                </button>
-              ) : (
-                <button className="flex-1 bg-[#f4c542] p-2 rounded-md font-semibold cursor-pointer" onClick={completeRide}>
-                  Complete Ride
-                </button>
-              )}
+        {/* ---------- going to pickup ---------- */}
+        {view === "pickup" && activeRide && (
+          <>
+            <h2 className="text-[22px] font-extrabold tracking-tight">Pick up {activeRide.customer.name}</h2>
+            <p className="mb-4 text-sm text-gray-600">{activeRide.pickup.address ?? "Pickup point on the map"}</p>
+            <div className="flex gap-2.5">
+              <a
+                href={`tel:${activeRide.customer.phone}`}
+                className="grid h-12 flex-1 place-items-center rounded-2xl border border-gray-200 text-[15px] font-bold"
+              >
+                📞 Call
+              </a>
+              <a
+                href={navigateUrl(activeRide.pickup)}
+                target="_blank"
+                rel="noreferrer"
+                className="grid h-12 flex-1 place-items-center rounded-2xl border border-gray-200 text-[15px] font-bold"
+              >
+                🧭 Navigate
+              </a>
             </div>
-          </div>
+            <button
+              onClick={arrivedAtPickup}
+              className="mt-3 h-14 w-full rounded-2xl bg-[#f4c542] text-[17px] font-extrabold cursor-pointer hover:bg-[#e6b93c]"
+            >
+              I've arrived
+            </button>
+          </>
         )}
 
-        <Map driverLocation={{ lat: driver?.current_lat, lng: driver?.current_lng }} target={target} />
+        {/* ---------- on the trip ---------- */}
+        {view === "trip" && activeRide && (
+          <>
+            <h2 className="text-[22px] font-extrabold tracking-tight">On the trip</h2>
+            <p className="mb-4 text-sm text-gray-600">To {activeRide.destination.address ?? "the destination"}</p>
+            <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-[#f7f7f5] p-3">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-black font-extrabold text-[#f4c542]">
+                {activeRide.customer.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p className="font-bold">{activeRide.customer.name}</p>
+                <p className="text-xs text-gray-500">{activeRide.customer.phone}</p>
+              </div>
+              <a
+                href={`tel:${activeRide.customer.phone}`}
+                aria-label="Call customer"
+                className="ml-auto grid h-10 w-10 place-items-center rounded-full bg-green-600"
+              >
+                📞
+              </a>
+            </div>
+            <a
+              href={navigateUrl(activeRide.destination)}
+              target="_blank"
+              rel="noreferrer"
+              className="grid h-12 w-full place-items-center rounded-2xl border border-gray-200 text-[15px] font-bold"
+            >
+              🧭 Navigate
+            </a>
+            <button
+              onClick={completeRide}
+              className="mt-3 h-14 w-full rounded-2xl bg-green-600 text-[17px] font-extrabold text-white cursor-pointer hover:bg-green-700"
+            >
+              Complete ride
+            </button>
+          </>
+        )}
       </div>
+    </div>
+  );
+}
+
+// pickup → destination box
+function Trip({ pickup, destination }: { pickup: RidePoint; destination: RidePoint }) {
+  return (
+    <div className="divide-y divide-gray-200 rounded-2xl border border-gray-200 bg-[#f7f7f5]">
+      <div className="flex items-center gap-3 px-4 py-3">
+        <span className="h-3 w-3 shrink-0 rounded-full bg-green-600 ring-4 ring-green-100" />
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium text-gray-500">Pickup</p>
+          <p className="truncate text-[15px] font-semibold">{pickup.address ?? "Point on the map"}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 px-4 py-3">
+        <span className="h-3 w-3 shrink-0 rounded-sm bg-black" />
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium text-gray-500">Destination</p>
+          <p className="truncate text-[15px] font-semibold">{destination.address ?? "Point on the map"}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ring that empties as the 30 seconds run out
+function Countdown({ secondsLeft }: { secondsLeft: number }) {
+  const r = 22;
+  const length = 2 * Math.PI * r;
+  return (
+    <div className="relative h-14 w-14">
+      <svg viewBox="0 0 56 56" className="h-14 w-14 -rotate-90">
+        <circle cx="28" cy="28" r={r} stroke="#eee" strokeWidth="5" fill="none" />
+        <circle
+          cx="28"
+          cy="28"
+          r={r}
+          stroke={secondsLeft <= 10 ? "#e11d48" : "#16a34a"}
+          strokeWidth="5"
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={length}
+          strokeDashoffset={length * (1 - secondsLeft / OFFER_SECONDS)}
+          className="transition-all duration-1000 ease-linear"
+        />
+      </svg>
+      <span className="absolute inset-0 grid place-items-center text-sm font-extrabold">{secondsLeft}s</span>
     </div>
   );
 }
