@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 import db from "@/lib/db";
+import { logAdmin } from "@/lib/LogAdmin"
 
 // admin cancels any ride that's still active
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -33,6 +34,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (ride.status === "assigned" || ride.status === "en_route") {
       await db.query("UPDATE driver SET status = 'online' WHERE id = ? AND status = 'busy'", [ride.driver_id]);
     }
+    await logAdmin("cancel_ride", "ride", rideId, `Was ${ride.status}`);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

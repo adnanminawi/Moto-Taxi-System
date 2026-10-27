@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CarTaxiFront, UserCircle, BarChart3, MapPin } from "lucide-react";
+import { LayoutDashboard, Users, CarTaxiFront, UserCircle, BarChart3, MapPin, ClipboardList } from "lucide-react";
 
 export const ADMIN_MENU = [
   { title: "Dashboard", icon: LayoutDashboard, href: "/admin" },
@@ -7,6 +7,7 @@ export const ADMIN_MENU = [
   { title: "Customers", icon: Users, href: "/admin/customers" },
   { title: "Rides", icon: CarTaxiFront, href: "/admin/rides" },
   { title: "Statistics", icon: BarChart3, href: "/admin/statistics" },
+  { title: "Activity log", icon: ClipboardList, href: "/admin/activity" },
 ];
 
 // "/admin" must match exactly; the others also match their sub-pages (e.g. /admin/drivers/7)

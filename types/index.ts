@@ -191,3 +191,12 @@ export type LiveRide = {
 };
 
 export type LiveData = { drivers: LiveDriver[]; rides: LiveRide[] };
+export type AdminLog = {
+  id: number;
+  action: string;
+  target_type: "ride" | "driver" | "customer";
+  target_id: number | null;
+  details: string | null;
+  created_at: string;
+  admin_username: string | null;
+};
