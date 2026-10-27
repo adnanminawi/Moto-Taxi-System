@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getDrivers, deleteDriver } from "@/services/admin";
+import { getDrivers, deleteDriver, forceOffline } from "@/services/admin";
 import type { Driver } from "@/types";
 
 const DRIVER_STATUS: Record<Driver["status"], { label: string; dot: string }> = {
@@ -14,6 +14,18 @@ const DRIVER_STATUS: Record<Driver["status"], { label: string; dot: string }> = 
 type Filter = "all" | Driver["status"];
 const FILTERS: Filter[] = ["all", "online", "busy", "offline"];
 
+const STALE_MINUTES = 2;
+function minutesAgo(date?: string | null): number | null {
+  if (!date) return null;
+  return Math.floor((Date.now() - new Date(date).getTime()) / 60000);
+}
+function lastSeenText(mins: number | null): string {
+  if (mins === null) return "Never";
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  if (mins < 60 * 24) return `${Math.floor(mins / 60)}h ago`;
+  return `${Math.floor(mins / (60 * 24))}d ago`;
+}
 export default function DriversPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +65,15 @@ export default function DriversPage() {
       alert(err.response?.data?.message ?? "Failed to delete driver");
     }
   }
+  async function handleForceOffline(driver: Driver) {
+    if (!confirm(`Set ${driver.name} offline? They'll stop getting rides until they go online again.`)) return;
+    try {
+      await forceOffline(driver.id);
+      setDrivers((prev) => prev.map((d) => (d.id === driver.id ? { ...d, status: "offline" } : d)));
+    } catch (err: any) {
+      alert(err.response?.data?.message ?? "Failed to set driver offline");
+    }
+  }
 
   if (loading) return <p className="text-sm text-slate-500">Loading drivers…</p>;
   if (error) return <p className="text-sm text-rose-600">{error}</p>;
@@ -78,9 +99,8 @@ export default function DriversPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                filter === f ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600"
-              }`}
+              className={`rounded-full px-3 py-1.5 text-sm font-medium ${filter === f ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600"
+                }`}
             >
               {f === "all" ? "All" : DRIVER_STATUS[f].label}
             </button>
@@ -104,6 +124,7 @@ export default function DriversPage() {
                 <th className="px-5 py-3">Driver</th>
                 <th className="px-5 py-3">Phone</th>
                 <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3">Last seen</th>
                 <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -121,7 +142,27 @@ export default function DriversPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3">
+                      {(() => {
+                        const mins = minutesAgo(d.last_location_update);
+                        const stale = d.status === "online" && (mins === null || mins >= STALE_MINUTES);
+                        return (
+                          <span className={stale ? "font-semibold text-amber-600" : "text-slate-500"}>
+                            {stale && "⚠️ "}
+                            {lastSeenText(mins)}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-5 py-3">
                       <div className="flex justify-end gap-2">
+                        {d.status === "online" && (
+                          <button
+                            onClick={() => handleForceOffline(d)}
+                            className="rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-50"
+                          >
+                            Set offline
+                          </button>
+                        )}
                         <Link
                           href={`/admin/drivers/${d.id}`}
                           className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50"

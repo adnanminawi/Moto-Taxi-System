@@ -50,7 +50,7 @@ export default function DriverClient() {
   // customer can cancel while we're going to pickup.
   // the cancel route sets the driver back to "online", so if our status
   // turns "online" during an assigned ride, the ride was cancelled.
-  const goingToPickup = activeRide?.status === "assigned";
+  const goingToPickup = activeRide !== null;
   useEffect(() => {
     if (!goingToPickup) return;
     const timer = setInterval(async () => {

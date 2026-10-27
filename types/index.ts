@@ -26,6 +26,7 @@ export type Driver = {
   status: "offline" | "online" | "busy";
   current_lat: number;  
   current_lng: number;
+  last_location_update?: string | null;
 };
 
 export type DriverLogin ={
