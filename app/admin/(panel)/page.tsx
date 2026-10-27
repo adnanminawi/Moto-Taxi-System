@@ -48,13 +48,13 @@ export default function AdminDashboard() {
     return () => clearInterval(timer);
   }, [load]);
 
-  if (loading) return <p className="text-sm text-slate-500">Loading dashboard…</p>;
+  if (loading) return <p className="text-sm text-gray-500">Loading dashboard…</p>;
 
   if (error && !data) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
+      <div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
         <p className="font-semibold">{error}</p>
-        <button onClick={load} className="mt-3 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white">
+        <button onClick={load} className="mt-3 rounded-xl bg-[#111] px-4 py-2 text-sm font-bold text-white cursor-pointer">
           Try again
         </button>
       </div>
@@ -75,15 +75,15 @@ export default function AdminDashboard() {
       {/* header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-[26px] font-extrabold tracking-tight">Overview</h1>
+          <p className="text-sm text-gray-500">
             Platform activity at a glance
             {updatedAt && ` · updated ${updatedAt.toLocaleTimeString()}`}
           </p>
         </div>
         <button
           onClick={load}
-          className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+          className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold hover:bg-gray-50 transition cursor-pointer"
         >
           <RefreshCw size={16} />
           Refresh
@@ -91,14 +91,14 @@ export default function AdminDashboard() {
       </div>
 
       {error && (
-        <p className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-700">
+        <p className="rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-800">
           {error} Showing the last loaded data.
         </p>
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatTile label="Drivers" value={totalDrivers} hint={`${online} online now`} icon={<CarTaxiFront size={18} />} tone="blue" />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        <StatTile label="Drivers" value={totalDrivers} hint={`${online} online now`} icon={<CarTaxiFront size={18} />} tone="yellow" />
         <StatTile label="Customers" value={data?.total_customers ?? 0} icon={<Users size={18} />} tone="slate" />
         <StatTile label="Total rides" value={totalRides} icon={<Route size={18} />} tone="slate" />
         <StatTile label="Completed" value={data?.completed_rides ?? 0} hint={`${pct(data?.completed_rides ?? 0)}% of all rides`} icon={<CheckCircle size={18} />} tone="green" />
@@ -111,33 +111,38 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2">
           <Card
             title="Live drivers"
-            action={<span className="flex items-center gap-1.5 text-xs text-slate-500"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />Live</span>}
+            action={
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-green-600" />
+                Live
+              </span>
+            }
           >
-            <div className="h-[360px] overflow-hidden rounded-xl">
+            <div className="h-[360px] overflow-hidden rounded-2xl">
               <LiveMap />
             </div>
           </Card>
         </div>
 
         <Card title="Driver status">
-          <div className="flex h-3 overflow-hidden rounded-full bg-slate-100">
-            <div className="bg-emerald-500" style={{ width: `${share(online)}%` }} />
-            <div className="bg-amber-400" style={{ width: `${share(busy)}%` }} />
-            <div className="bg-slate-300" style={{ width: `${share(offline)}%` }} />
+          <div className="flex h-3 overflow-hidden rounded-full bg-gray-100">
+            <div className="bg-green-600" style={{ width: `${share(online)}%` }} />
+            <div className="bg-[#f4c542]" style={{ width: `${share(busy)}%` }} />
+            <div className="bg-gray-300" style={{ width: `${share(offline)}%` }} />
           </div>
 
           <ul className="mt-5 space-y-3 text-sm">
             {[
-              { label: "Online", value: online, dot: "bg-emerald-500" },
-              { label: "On a ride", value: busy, dot: "bg-amber-400" },
-              { label: "Offline", value: offline, dot: "bg-slate-300" },
+              { label: "Online", value: online, dot: "bg-green-600" },
+              { label: "On a ride", value: busy, dot: "bg-[#f4c542]" },
+              { label: "Offline", value: offline, dot: "bg-gray-300" },
             ].map((row) => (
               <li key={row.label} className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-slate-600">
+                <span className="flex items-center gap-2 text-gray-600">
                   <span className={`h-2.5 w-2.5 rounded-full ${row.dot}`} />
                   {row.label}
                 </span>
-                <span className="font-semibold text-slate-900">{row.value}</span>
+                <span className="font-extrabold">{row.value}</span>
               </li>
             ))}
           </ul>
