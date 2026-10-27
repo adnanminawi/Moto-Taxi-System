@@ -57,3 +57,6 @@ export async function logout() {
 export async function forceOffline(driverId: number): Promise<void> {
   await api.post(`/admin/drivers/${driverId}/offline`);
 }
+export async function cancelRide(rideId: number): Promise<void> {
+  await api.post(`/admin/ride/${rideId}/cancel`);
+}

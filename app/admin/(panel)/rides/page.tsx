@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getRides } from "@/services/admin";
+import { getRides, cancelRide } from "@/services/admin";
 import type { RideInfo } from "@/types";
-import { RIDE_STATUS, ASSIGNABLE } from "@/lib/rideStatus";
+import { RIDE_STATUS, ASSIGNABLE, CANCELLABLE } from "@/lib/rideStatus";
 
 type Filter = "all" | RideInfo["status"];
 
@@ -50,6 +50,16 @@ export default function RidesPage() {
     });
   }, [rides, filter, query]);
 
+  async function handleCancel(ride: RideInfo) {
+    if (!confirm(`Cancel ride #${ride.id} for ${ride.customer_name}?`)) return;
+    try {
+      await cancelRide(ride.id);
+      setRides((prev) => prev.map((r) => (r.id === ride.id ? { ...r, status: "cancelled" } : r)));
+    } catch (err: any) {
+      alert(err.response?.data?.message ?? "Failed to cancel ride");
+    }
+  }
+
   if (loading) return <p className="text-sm text-slate-500">Loading rides…</p>;
   if (error) return <p className="text-sm text-rose-600">{error}</p>;
 
@@ -66,9 +76,8 @@ export default function RidesPage() {
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                filter === f.value ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600"
-              }`}
+              className={`rounded-full px-3 py-1.5 text-sm font-medium ${filter === f.value ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600"
+                }`}
             >
               {f.label}
             </button>
@@ -117,15 +126,25 @@ export default function RidesPage() {
                         {status.label}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right">
-                      {ASSIGNABLE.includes(ride.status) && (
-                        <Link
-                          href={`/admin/rides/${ride.id}/assign`}
-                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-                        >
-                          Assign
-                        </Link>
-                      )}
+                    <td className="px-5 py-3">
+                      <div className="flex justify-end gap-2">
+                        {ASSIGNABLE.includes(ride.status) && (
+                          <Link
+                            href={`/admin/rides/${ride.id}/assign`}
+                            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                          >
+                            Assign
+                          </Link>
+                        )}
+                        {CANCELLABLE.includes(ride.status) && (
+                          <button
+                            onClick={() => handleCancel(ride)}
+                            className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

@@ -13,3 +13,4 @@ export const RIDE_STATUS: Record<RideStatus, { label: string; badge: string }> =
 
 // rides an admin can still assign manually
 export const ASSIGNABLE: RideStatus[] = ["searching", "no_driver_found"];
+export const CANCELLABLE: RideStatus[] = ["searching", "assigned", "en_route"];
