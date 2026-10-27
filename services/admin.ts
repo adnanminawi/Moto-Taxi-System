@@ -1,5 +1,5 @@
 import api from "./axios";
-import {  type Customer, type UpdateCustomer, AdminLogin, AdminLoginResponse, AssignDriver, CreateDriver, Driver, RideInfo, Stats, DriverDetails,OnlineDriver} from "@/types";
+import {  type Customer, type UpdateCustomer, AdminLogin, AdminLoginResponse, AssignDriver, CreateDriver, Driver, RideInfo, Stats, DriverDetails,OnlineDriver,LiveData,AdminLog} from "@/types";
 
 
 export async function getCustomers(): Promise<Customer[]> {
@@ -59,4 +59,12 @@ export async function forceOffline(driverId: number): Promise<void> {
 }
 export async function cancelRide(rideId: number): Promise<void> {
   await api.post(`/admin/ride/${rideId}/cancel`);
+}
+export async function getLive(): Promise<LiveData> {
+  const res = await api.get<LiveData>("/admin/live");
+  return res.data;
+}
+export async function getActivity(): Promise<AdminLog[]> {
+  const res = await api.get<{ logs: AdminLog[] }>("/admin/activity");
+  return res.data.logs;
 }

@@ -166,3 +166,37 @@ export type Place = {
   lat: number;
   lng: number;
 };
+export type LiveDriver = {
+  id: number;
+  name: string;
+  phone: string;
+  status: "online" | "busy";
+  current_lat: string | number;
+  current_lng: string | number;
+  last_location_update?: string | null;
+};
+
+export type LiveRide = {
+  id: number;
+  status: "searching" | "assigned" | "en_route";
+  pickup_lat: string | number;
+  pickup_lng: string | number;
+  pickup_address: string | null;
+  destination_lat: string | number;
+  destination_lng: string | number;
+  destination_address: string | null;
+  customer_name: string;
+  customer_phone: string;
+  driver_name: string | null;
+};
+
+export type LiveData = { drivers: LiveDriver[]; rides: LiveRide[] };
+export type AdminLog = {
+  id: number;
+  action: string;
+  target_type: "ride" | "driver" | "customer";
+  target_id: number | null;
+  details: string | null;
+  created_at: string;
+  admin_username: string | null;
+};

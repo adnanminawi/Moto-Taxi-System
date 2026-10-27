@@ -1,6 +1,7 @@
 import db from "@/lib/db";
 import bcrypt from "bcrypt";
-import { RowDataPacket } from "mysql2";
+import { RowDataPacket, ResultSetHeader } from "mysql2";
+import { logAdmin } from "@/lib/LogAdmin";
 
 export async function GET() {
   try {
@@ -24,13 +25,15 @@ export async function POST(request: Request) {
 
     const password_hash = await bcrypt.hash(password, 10);
 
-    await db.query(
+    const [result] = await db.query<ResultSetHeader>(
       "INSERT INTO driver (name, phone, password_hash, status) VALUES (?, ?, ?, 'offline')",
       [name.trim(), phone.trim(), password_hash]
     );
+
+    await logAdmin("create_driver", "driver", result.insertId, name.trim());
+
     return Response.json({ ok: true }, { status: 201 });
   } catch (error: any) {
-    // phone column is UNIQUE — the database rejects duplicates
     if (error.code === "ER_DUP_ENTRY") {
       return Response.json({ message: "Phone already exists." }, { status: 409 });
     }

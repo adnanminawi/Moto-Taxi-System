@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 import db from "@/lib/db";
-import { rejectRide } from "@/lib/rides"; // use the same import path as in lib/expireOffers.ts
+import { rejectRide } from "@/lib/rides"; 
+import { logAdmin } from "@/lib/LogAdmin";
 
 // admin sets a driver offline (e.g. they closed the app but still show "online")
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -29,6 +30,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     for (const ride of offers) {
       await rejectRide(ride.id, driverId);
     }
+
+     await logAdmin("force_offline", "driver", driverId);
 
     return NextResponse.json({ ok: true });
   } catch (error) {
