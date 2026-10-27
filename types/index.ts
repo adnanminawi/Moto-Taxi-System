@@ -160,3 +160,8 @@ export type DriverDetails = {
   rides: DriverRide[];
   totalRides: number;
 };
+export type Place = {
+  name: string;
+  lat: number;
+  lng: number;
+};
