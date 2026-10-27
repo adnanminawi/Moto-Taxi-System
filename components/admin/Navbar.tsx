@@ -6,24 +6,28 @@ import { LogOut } from "lucide-react";
 import { logout } from "@/services/admin";
 import { ADMIN_MENU, isActive, adminLogout } from "./Menu";
 
-export default function Navbar() {  
+export default function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur">
       <div className="flex items-center justify-between px-4 py-3 md:px-8">
         {/* brand on phones (the sidebar shows it on desktop) */}
-        <span className="text-lg font-extrabold md:hidden">🚖 Moto Admin</span>
-        <span className="hidden text-sm text-slate-500 md:block">Welcome back, Admin 👋</span>
+        <span className="flex items-center gap-2 md:hidden">
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-[#f4c542]">🏍️</span>
+          <span className="text-base font-extrabold">MotoTaxi</span>
+          <span className="text-[10px] font-bold text-gray-400">ADMIN</span>
+        </span>
+        <span className="hidden text-sm text-gray-500 md:block">Welcome back, Admin 👋</span>
 
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#111] text-sm font-extrabold text-[#f4c542]">
             A
           </div>
           <button
             onClick={() => adminLogout(logout)}
             aria-label="Logout"
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 md:hidden"
+            className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 cursor-pointer md:hidden"
           >
             <LogOut size={18} />
           </button>
@@ -36,8 +40,10 @@ export default function Navbar() {
           <Link
             key={item.href}
             href={item.href}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium ${
-              isActive(pathname, item.href) ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600"
+            className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold ${
+              isActive(pathname, item.href)
+                ? "bg-[#f4c542] text-[#111]"
+                : "border border-gray-200 bg-white text-gray-600"
             }`}
           >
             {item.title}

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { getCustomers } from "@/services/admin";
 import type { Customer } from "@/types";
 
@@ -38,38 +39,48 @@ export default function CustomersPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Customers</h1>
-          <p className="text-sm text-slate-500">{customers.length} registered customers</p>
+          <h1 className="text-[26px] font-extrabold tracking-tight">Customers</h1>
+          <p className="text-sm text-gray-500">{customers.length} registered customers</p>
         </div>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name or phone…"
-          className="w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm"
-        />
+        <label className="flex w-full max-w-xs items-center gap-2 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 focus-within:border-[#f4c542]">
+          <Search size={16} className="text-gray-400" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name or phone…"
+            className="w-full text-sm outline-none"
+          />
+        </label>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-3xl border border-gray-200/70 bg-white shadow-sm">
         {visible.length === 0 ? (
-          <p className="p-10 text-center text-sm text-slate-500">No customers found.</p>
+          <p className="p-10 text-center text-sm text-gray-500">No customers found.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+            <thead className="bg-[#fafaf8] text-left text-[11px] uppercase tracking-wide text-gray-500">
               <tr>
-                <th className="px-5 py-3">Customer</th>
-                <th className="px-5 py-3">Phone</th>
-                <th className="px-5 py-3 text-right">Action</th>
+                <th className="px-5 py-3 font-bold">Customer</th>
+                <th className="px-5 py-3 font-bold">Phone</th>
+                <th className="px-5 py-3 text-right font-bold">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-gray-100">
               {visible.map((c) => (
-                <tr key={c.id} className="hover:bg-slate-50">
-                  <td className="px-5 py-3 font-medium">{c.name}</td>
-                  <td className="px-5 py-3 text-slate-600">{c.phone}</td>
-                  <td className="px-5 py-3 text-right">
+                <tr key={c.id} className="hover:bg-gray-50">
+                  <td className="px-5 py-3.5">
+                    <span className="flex items-center gap-3">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#111] text-xs font-extrabold text-[#f4c542]">
+                        {c.name.charAt(0).toUpperCase()}
+                      </span>
+                      <span className="font-bold">{c.name}</span>
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-gray-600">{c.phone}</td>
+                  <td className="px-5 py-3.5 text-right">
                     <Link
                       href={`/admin/customers/${c.id}`}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50"
+                      className="rounded-xl border border-gray-200 px-3.5 py-1.5 text-xs font-bold hover:bg-gray-50"
                     >
                       View
                     </Link>

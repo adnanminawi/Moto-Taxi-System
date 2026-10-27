@@ -7,13 +7,24 @@ import L from "leaflet";
 import { getOnlineDrivers } from "@/services/admin";
 import type { OnlineDriver } from "@/types";
 
-// point default icons at the CDN (bundlers break the default paths)
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
+// same driver icon as the driver and customer maps — ring color shows the status
+const motoSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M8 17h6l3-6h-4l-2-4H8"/><path d="M15 7h3l2 4"/></svg>`;
+
+function driverIcon(status: string) {
+  const ring = status === "busy" ? "rgba(244,197,66,.4)" : "rgba(22,163,74,.3)"; // yellow = on a ride, green = online
+  return L.divIcon({
+    className: "",
+    html: `
+      <div style="width:60px;height:60px;border-radius:50%;background:${ring};display:grid;place-items:center">
+        <div style="width:40px;height:40px;border-radius:50%;background:#111;border:3px solid #fff;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.3)">
+          ${motoSvg}
+        </div>
+      </div>`,
+    iconSize: [60, 60],
+    iconAnchor: [30, 30],
+    popupAnchor: [0, -24],
+  });
+}
 
 // fit the map to the drivers ONCE, so the admin can zoom freely afterwards
 function FitDriversOnce({ drivers }: { drivers: OnlineDriver[] }) {
@@ -56,13 +67,13 @@ export default function LiveDriversMap() {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {drivers.map((d) => (
-        <Marker key={d.id} position={[Number(d.current_lat), Number(d.current_lng)]}>
+        <Marker key={d.id} position={[Number(d.current_lat), Number(d.current_lng)]} icon={driverIcon(d.status)}>
           <Popup>
-            <div className="text-center">
-              <h3 className="font-bold text-lg">{d.name}</h3>
-              <p>
-                Status:
-                <span className="text-green-600 ml-1 font-semibold">{d.status}</span>
+            <div className="min-w-[120px]">
+              <p className="font-bold">{d.name}</p>
+              <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold">
+                <span className={`h-2 w-2 rounded-full ${d.status === "busy" ? "bg-[#f4c542]" : "bg-green-600"}`} />
+                {d.status === "busy" ? "On a ride" : "Online"}
               </p>
             </div>
           </Popup>

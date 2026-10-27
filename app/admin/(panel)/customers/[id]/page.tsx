@@ -19,7 +19,7 @@ export default function CustomerProfile({ params }: { params: Promise<{ id: stri
   const [phone, setPhone] = useState("");
   const [notice, setNotice] = useState<Notice>(null);
 
-   useEffect(() => {
+  useEffect(() => {
     async function fetchCustomer() {
       try {
         const profile = await oneCustomer(customerId);
@@ -33,7 +33,6 @@ export default function CustomerProfile({ params }: { params: Promise<{ id: stri
     }
     fetchCustomer();
   }, [customerId]);
-
 
   async function handleSave() {
     if (!name.trim() || !phone.trim()) {
@@ -61,25 +60,26 @@ export default function CustomerProfile({ params }: { params: Promise<{ id: stri
     setNotice(null);
   }
 
- if (loadError) return <p className="text-sm text-rose-600">{loadError}</p>;
-  if (!customer) return <p className="text-sm text-slate-500">Loading customer…</p>;
+  if (loadError) return <p className="text-sm text-rose-600">{loadError}</p>;
+  if (!customer) return <p className="text-sm text-gray-500">Loading customer…</p>;
 
-  const input = "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2";
-  
+  const input =
+    "mt-1 w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-[15px] font-semibold outline-none focus:border-[#f4c542]";
+
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <Link href="/admin/customers" className="text-sm text-slate-500 hover:text-slate-900">
+      <Link href="/admin/customers" className="text-sm font-semibold text-gray-500 hover:text-[#111]">
         ← Back to customers
       </Link>
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center gap-4 border-b border-slate-100 p-6">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-700">
+      <div className="rounded-3xl border border-gray-200/70 bg-white shadow-sm">
+        <div className="flex items-center gap-4 border-b border-gray-100 p-6">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#111] text-xl font-extrabold text-[#f4c542]">
             {customer.name.charAt(0).toUpperCase()}
           </span>
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-slate-900">{customer.name}</h1>
-            <p className="text-sm text-slate-500">Customer #{customer.id}</p>
+            <h1 className="text-xl font-extrabold tracking-tight">{customer.name}</h1>
+            <p className="text-sm text-gray-500">Customer #{customer.id}</p>
           </div>
           {!isEditing && (
             <button
@@ -87,7 +87,7 @@ export default function CustomerProfile({ params }: { params: Promise<{ id: stri
                 setIsEditing(true);
                 setNotice(null);
               }}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+              className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold hover:bg-gray-50 transition cursor-pointer"
             >
               Edit
             </button>
@@ -96,27 +96,27 @@ export default function CustomerProfile({ params }: { params: Promise<{ id: stri
 
         <div className="space-y-5 p-6">
           <div>
-            <label className="text-xs font-medium uppercase tracking-wide text-slate-500">Full name</label>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Full name</label>
             {isEditing ? (
               <input className={input} value={name} onChange={(e) => setName(e.target.value)} />
             ) : (
-              <p className="mt-1 font-medium text-slate-900">{customer.name}</p>
+              <p className="mt-1 text-[15px] font-semibold">{customer.name}</p>
             )}
           </div>
 
           <div>
-            <label className="text-xs font-medium uppercase tracking-wide text-slate-500">Phone</label>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Phone</label>
             {isEditing ? (
-              <input className={input} value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <input className={input} value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" />
             ) : (
-              <p className="mt-1 font-medium text-slate-900">{customer.phone}</p>
+              <p className="mt-1 text-[15px] font-semibold">{customer.phone}</p>
             )}
           </div>
 
           {notice && (
             <p
-              className={`rounded-lg px-3 py-2 text-sm ${
-                notice.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+              className={`rounded-xl px-3 py-2 text-sm ${
+                notice.type === "success" ? "bg-green-50 text-green-700" : "bg-rose-50 text-rose-700"
               }`}
             >
               {notice.text}
@@ -125,18 +125,18 @@ export default function CustomerProfile({ params }: { params: Promise<{ id: stri
         </div>
 
         {isEditing && (
-          <div className="flex justify-end gap-3 border-t border-slate-100 p-4">
+          <div className="flex justify-end gap-3 border-t border-gray-100 p-4">
             <button
               onClick={handleCancel}
               disabled={saving}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-bold hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition disabled:opacity-50"
+              className="rounded-xl bg-[#111] px-5 py-2.5 text-sm font-bold text-white hover:bg-black/85 transition disabled:opacity-50 cursor-pointer"
             >
               {saving ? "Saving…" : "Save changes"}
             </button>

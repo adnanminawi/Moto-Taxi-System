@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { getDrivers, deleteDriver, forceOffline } from "@/services/admin";
 import type { Driver } from "@/types";
 
-const DRIVER_STATUS: Record<Driver["status"], { label: string; dot: string }> = {
-  online: { label: "Online", dot: "bg-emerald-500" },
-  busy: { label: "On a ride", dot: "bg-amber-400" },
-  offline: { label: "Offline", dot: "bg-slate-300" },
+const DRIVER_STATUS: Record<Driver["status"], { label: string; badge: string; dot: string }> = {
+  online: { label: "Online", badge: "bg-green-100 text-green-800", dot: "bg-green-600" },
+  busy: { label: "On a ride", badge: "bg-[#fdf3cf] text-yellow-900", dot: "bg-[#f4c542]" },
+  offline: { label: "Offline", badge: "bg-gray-100 text-gray-600", dot: "bg-gray-400" },
 };
 
 type Filter = "all" | Driver["status"];
@@ -82,12 +83,12 @@ export default function DriversPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Drivers</h1>
-          <p className="text-sm text-slate-500">{drivers.length} drivers</p>
+          <h1 className="text-[26px] font-extrabold tracking-tight">Drivers</h1>
+          <p className="text-sm text-gray-500">{drivers.length} drivers</p>
         </div>
         <Link
           href="/admin/drivers/create"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="rounded-xl bg-[#111] px-4 py-2.5 text-sm font-bold text-white hover:bg-black/85"
         >
           + Add driver
         </Link>
@@ -99,79 +100,89 @@ export default function DriversPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`rounded-full px-3 py-1.5 text-sm font-medium ${filter === f ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600"
+              className={`rounded-full px-3.5 py-1.5 text-sm font-semibold cursor-pointer ${filter === f ? "bg-[#111] text-white" : "border border-gray-200 bg-white text-gray-600"
                 }`}
             >
               {f === "all" ? "All" : DRIVER_STATUS[f].label}
             </button>
           ))}
         </div>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name or phone…"
-          className="w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm"
-        />
+        <label className="flex w-full max-w-xs items-center gap-2 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 focus-within:border-[#f4c542]">
+          <Search size={16} className="text-gray-400" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name or phone…"
+            className="w-full text-sm outline-none"
+          />
+        </label>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-3xl border border-gray-200/70 bg-white shadow-sm">
         {visible.length === 0 ? (
-          <p className="p-10 text-center text-sm text-slate-500">No drivers found.</p>
+          <p className="p-10 text-center text-sm text-gray-500">No drivers found.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+            <thead className="bg-[#fafaf8] text-left text-[11px] uppercase tracking-wide text-gray-500">
               <tr>
-                <th className="px-5 py-3">Driver</th>
-                <th className="px-5 py-3">Phone</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3">Last seen</th>
-                <th className="px-5 py-3 text-right">Actions</th>
+                <th className="px-5 py-3 font-bold">Driver</th>
+                <th className="px-5 py-3 font-bold">Phone</th>
+                <th className="px-5 py-3 font-bold">Status</th>
+                <th className="px-5 py-3 font-bold">Last seen</th>
+                <th className="px-5 py-3 text-right font-bold">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-gray-100">
               {visible.map((d) => {
                 const s = DRIVER_STATUS[d.status];
                 return (
-                  <tr key={d.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3 font-medium">{d.name}</td>
-                    <td className="px-5 py-3 text-slate-600">{d.phone}</td>
-                    <td className="px-5 py-3">
-                      <span className="flex items-center gap-2">
-                        <span className={`h-2 w-2 rounded-full ${s.dot}`} />
+                  <tr key={d.id} className="hover:bg-gray-50">
+                    <td className="px-5 py-3.5">
+                      <span className="flex items-center gap-3">
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#111] text-xs font-extrabold text-[#f4c542]">
+                          {d.name.charAt(0).toUpperCase()}
+                        </span>
+                        <span className="font-bold">{d.name}</span>
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-gray-600">{d.phone}</td>
+                    <td className="px-5 py-3.5">
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${s.badge}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
                         {s.label}
                       </span>
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3.5">
                       {(() => {
                         const mins = minutesAgo(d.last_location_update);
                         const stale = d.status === "online" && (mins === null || mins >= STALE_MINUTES);
                         return (
-                          <span className={stale ? "font-semibold text-amber-600" : "text-slate-500"}>
+                          <span className={stale ? "font-bold text-amber-600" : "text-gray-500"}>
                             {stale && "⚠️ "}
                             {lastSeenText(mins)}
                           </span>
                         );
                       })()}
                     </td>
-                    <td className="px-5 py-3">
-                      <div className="flex justify-end gap-2">
+                    <td className="px-5 py-3.5">
+                      <div className="flex justify-end gap-2 whitespace-nowrap">
                         {d.status === "online" && (
                           <button
                             onClick={() => handleForceOffline(d)}
-                            className="rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-50"
+                            className="rounded-xl border border-amber-200 px-3 py-1.5 text-xs font-bold text-amber-700 hover:bg-amber-50 cursor-pointer"
                           >
                             Set offline
                           </button>
                         )}
                         <Link
                           href={`/admin/drivers/${d.id}`}
-                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50"
+                          className="rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-bold hover:bg-gray-50"
                         >
                           View
                         </Link>
                         <button
                           onClick={() => handleDelete(d)}
-                          className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                          className="rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 cursor-pointer"
                         >
                           Delete
                         </button>

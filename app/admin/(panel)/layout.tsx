@@ -4,7 +4,7 @@ import Navbar from "@/components/admin/Navbar";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-[#eef0ea] font-sans text-[#111]">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <Navbar />

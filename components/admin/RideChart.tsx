@@ -8,7 +8,8 @@ type RideChartProps = {
   cancelled: number;
 };
 
-const COLORS = ["#22c55e", "#f59e0b", "#ef4444"];
+// green / yellow / red — same status colors as the rest of the app
+const COLORS = ["#16a34a", "#f4c542", "#e11d48"];
 
 export default function RideChart({ completed, searching, cancelled }: RideChartProps) {
   const data = [
@@ -18,11 +19,11 @@ export default function RideChart({ completed, searching, cancelled }: RideChart
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow p-6">
-      <h2 className="font-bold text-xl mb-5">Ride Status</h2>
-      <ResponsiveContainer width="100%" height={350}>
+    <div className="rounded-3xl border border-gray-200/70 bg-white p-5 shadow-sm">
+      <h2 className="mb-4 text-[15px] font-extrabold">Ride status</h2>
+      <ResponsiveContainer width="100%" height={320}>
         <PieChart>
-          <Pie data={data} dataKey="value" outerRadius={120} label>
+          <Pie data={data} dataKey="value" innerRadius={70} outerRadius={120} paddingAngle={2} label>
             {data.map((_, i) => (
               <Cell key={i} fill={COLORS[i]} />
             ))}

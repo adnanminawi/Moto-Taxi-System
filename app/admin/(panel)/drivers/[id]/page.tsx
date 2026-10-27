@@ -10,9 +10,9 @@ import StatTile from "@/components/admin/StatTile";
 import { Route, CheckCircle, Activity } from "lucide-react";
 
 const DRIVER_STATUS = {
-  online: { label: "Online", dot: "bg-emerald-500" },
-  busy: { label: "On a ride", dot: "bg-amber-400" },
-  offline: { label: "Offline", dot: "bg-slate-300" },
+  online: { label: "Online", badge: "bg-green-100 text-green-800", dot: "bg-green-600" },
+  busy: { label: "On a ride", badge: "bg-[#fdf3cf] text-yellow-900", dot: "bg-[#f4c542]" },
+  offline: { label: "Offline", badge: "bg-gray-100 text-gray-600", dot: "bg-gray-400" },
 } as const;
 
 export default function DriverDetailPage() {
@@ -32,11 +32,13 @@ export default function DriverDetailPage() {
   fetchDriver();
 }, [id]);
 
-  if (error) {
+    if (error) {
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
+      <div className="mx-auto max-w-xl rounded-3xl border border-rose-200 bg-rose-50 p-6 text-rose-700">
         <p className="font-semibold">{error}</p>
-        <Link href="/admin/drivers" className="mt-3 inline-block text-sm underline">Back to drivers</Link>
+        <Link href="/admin/drivers" className="mt-3 inline-block text-sm font-semibold underline">
+          Back to drivers
+        </Link>
       </div>
     );
   }
@@ -44,15 +46,16 @@ export default function DriverDetailPage() {
   if (!details) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-16 rounded-2xl bg-slate-200" />
+        <div className="h-24 rounded-3xl bg-gray-200/70" />
         <div className="grid gap-4 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-32 rounded-2xl bg-slate-200" />)}
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-32 rounded-3xl bg-gray-200/70" />
+          ))}
         </div>
-        <div className="h-72 rounded-2xl bg-slate-200" />
+        <div className="h-72 rounded-3xl bg-gray-200/70" />
       </div>
     );
   }
-
   const driver = details.driver_Profile[0];
   const { rides, totalRides } = details;
   const status = DRIVER_STATUS[driver.status];
@@ -60,19 +63,21 @@ export default function DriverDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link href="/admin/drivers" className="text-sm text-slate-500 hover:text-slate-900">
+      <Link href="/admin/drivers" className="text-sm font-semibold text-gray-500 hover:text-[#111]">
         ← Back to drivers
       </Link>
 
-      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-xl font-bold text-amber-700">
+      <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-gray-200/70 bg-white p-6 shadow-sm">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#111] text-xl font-extrabold text-[#f4c542]">
           {driver.name.charAt(0).toUpperCase()}
         </span>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-slate-900">{driver.name}</h1>
-          <p className="text-sm text-slate-500">{driver.phone} · Driver #{driver.id}</p>
+          <h1 className="text-xl font-extrabold tracking-tight">{driver.name}</h1>
+          <p className="text-sm text-gray-500">
+            {driver.phone} · Driver #{driver.id}
+          </p>
         </div>
-        <span className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-sm font-medium text-slate-700">
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold ${status.badge}`}>
           <span className={`h-2 w-2 rounded-full ${status.dot}`} />
           {status.label}
         </span>
@@ -81,38 +86,42 @@ export default function DriverDetailPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile label="All rides" value={rides.length} icon={<Route size={18} />} tone="slate" />
         <StatTile label="Completed" value={totalRides} icon={<CheckCircle size={18} />} tone="green" />
-        <StatTile label="In progress" value={active} icon={<Activity size={18} />} tone="amber" />
+        <StatTile label="In progress" value={active} icon={<Activity size={18} />} tone="yellow" />
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-100 px-5 py-4">
-          <h2 className="font-semibold text-slate-900">Ride history</h2>
+      <div className="overflow-hidden rounded-3xl border border-gray-200/70 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-5 py-4">
+          <h2 className="text-[15px] font-extrabold">Ride history</h2>
         </div>
         {rides.length === 0 ? (
-          <p className="p-10 text-center text-sm text-slate-500">This driver hasn't had any rides yet.</p>
+          <p className="p-10 text-center text-sm text-gray-500">This driver hasn't had any rides yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <thead className="bg-[#fafaf8] text-left text-[11px] uppercase tracking-wide text-gray-500">
                 <tr>
-                  <th className="px-5 py-3">#</th>
-                  <th className="px-5 py-3">Customer</th>
-                  <th className="px-5 py-3">Pickup</th>
-                  <th className="px-5 py-3">Destination</th>
-                  <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3 font-bold">#</th>
+                  <th className="px-5 py-3 font-bold">Customer</th>
+                  <th className="px-5 py-3 font-bold">Pickup</th>
+                  <th className="px-5 py-3 font-bold">Destination</th>
+                  <th className="px-5 py-3 font-bold">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-gray-100">
                 {rides.map((r) => {
                   const s = RIDE_STATUS[r.status];
                   return (
-                    <tr key={r.id} className="hover:bg-slate-50">
-                      <td className="px-5 py-3 text-slate-400">{r.id}</td>
-                      <td className="px-5 py-3 font-medium text-slate-900">{r.customer_name}</td>
-                      <td className="max-w-[220px] truncate px-5 py-3 text-slate-600" title={r.pickup_address}>{r.pickup_address}</td>
-                      <td className="max-w-[220px] truncate px-5 py-3 text-slate-600" title={r.destination_address}>{r.destination_address}</td>
-                      <td className="px-5 py-3">
-                        <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${s.badge}`}>{s.label}</span>
+                    <tr key={r.id} className="hover:bg-gray-50">
+                      <td className="px-5 py-3.5 text-gray-400">{r.id}</td>
+                      <td className="px-5 py-3.5 font-bold">{r.customer_name}</td>
+                      <td className="max-w-[220px] truncate px-5 py-3.5 text-gray-600" title={r.pickup_address}>
+                        {r.pickup_address}
+                      </td>
+                      <td className="max-w-[220px] truncate px-5 py-3.5 text-gray-600" title={r.destination_address}>
+                        {r.destination_address}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${s.badge}`}>{s.label}</span>
                       </td>
                     </tr>
                   );

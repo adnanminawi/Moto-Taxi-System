@@ -27,7 +27,7 @@ export default function StatisticsPage() {
   }, []);
 
   if (error) return <p className="text-sm text-rose-600">{error}</p>;
-  if (!stats) return <p className="text-sm text-slate-500">Loading statistics…</p>;
+  if (!stats) return <p className="text-sm text-gray-500">Loading statistics…</p>;
 
   const finished = stats.completed_rides + stats.cancelled_rides;
   const activeDrivers = stats.online + stats.busy;
@@ -35,8 +35,8 @@ export default function StatisticsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Statistics</h1>
-        <p className="text-sm text-slate-500">Ride outcomes and driver activity</p>
+        <h1 className="text-[26px] font-extrabold tracking-tight">Statistics</h1>
+        <p className="text-sm text-gray-500">Ride outcomes and driver activity</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -59,14 +59,14 @@ export default function StatisticsPage() {
           value={`${percent(stats.busy, activeDrivers)}%`}
           hint={`${stats.busy} of ${activeDrivers} active drivers on a ride`}
           icon={<Activity size={18} />}
-          tone="amber"
+          tone="yellow"
         />
         <StatTile
           label="Rides per driver"
           value={stats.total_drivers ? (stats.total_rides / stats.total_drivers).toFixed(1) : "0"}
           hint={`${stats.total_rides} rides · ${stats.total_drivers} drivers`}
           icon={<Route size={18} />}
-          tone="blue"
+          tone="slate"
         />
       </div>
 
