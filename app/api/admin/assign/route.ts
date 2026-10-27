@@ -1,6 +1,6 @@
 import db from "@/lib/db";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
-import { logAdmin } from "@/lib/logAdmin";
+import { logAdmin } from "@/lib/LogAdmin";
 
 export async function POST(req: Request) {
   try {
