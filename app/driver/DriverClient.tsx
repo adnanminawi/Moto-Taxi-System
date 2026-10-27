@@ -10,9 +10,6 @@ const Map = dynamic(() => import("@/components/DriverMap"), { ssr: false });
 
 const OFFER_SECONDS = 30;
 
-// opens Google Maps (app on phones) with directions to the point
-const navigateUrl = (p: RidePoint) =>
-  `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=driving`;
 
 export default function DriverClient() {
   const [rideRequest, setRideRequest] = useState<RideRequest | null>(null);
@@ -154,10 +151,10 @@ export default function DriverClient() {
       ? "trip"
       : "pickup"
     : rideRequest
-    ? "request"
-    : isOnline
-    ? "waiting"
-    : "offline";
+      ? "request"
+      : isOnline
+        ? "waiting"
+        : "offline";
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-[#eef0ea] text-[#111] font-sans">
@@ -287,26 +284,17 @@ export default function DriverClient() {
         )}
 
         {/* ---------- going to pickup ---------- */}
+        {/* ---------- going to pickup ---------- */}
         {view === "pickup" && activeRide && (
           <>
             <h2 className="text-[22px] font-extrabold tracking-tight">Pick up {activeRide.customer.name}</h2>
             <p className="mb-4 text-sm text-gray-600">{activeRide.pickup.address ?? "Pickup point on the map"}</p>
-            <div className="flex gap-2.5">
-              <a
-                href={`tel:${activeRide.customer.phone}`}
-                className="grid h-12 flex-1 place-items-center rounded-2xl border border-gray-200 text-[15px] font-bold"
-              >
-                📞 Call
-              </a>
-              <a
-                href={navigateUrl(activeRide.pickup)}
-                target="_blank"
-                rel="noreferrer"
-                className="grid h-12 flex-1 place-items-center rounded-2xl border border-gray-200 text-[15px] font-bold"
-              >
-                🧭 Navigate
-              </a>
-            </div>
+            <a
+              href={`tel:${activeRide.customer.phone}`}
+              className="grid h-12 w-full place-items-center rounded-2xl border border-gray-200 text-[15px] font-bold"
+            >
+              📞 Call {activeRide.customer.name}
+            </a>
             <button
               onClick={arrivedAtPickup}
               className="mt-3 h-14 w-full rounded-2xl bg-[#f4c542] text-[17px] font-extrabold cursor-pointer hover:bg-[#e6b93c]"
@@ -337,17 +325,9 @@ export default function DriverClient() {
                 📞
               </a>
             </div>
-            <a
-              href={navigateUrl(activeRide.destination)}
-              target="_blank"
-              rel="noreferrer"
-              className="grid h-12 w-full place-items-center rounded-2xl border border-gray-200 text-[15px] font-bold"
-            >
-              🧭 Navigate
-            </a>
             <button
               onClick={completeRide}
-              className="mt-3 h-14 w-full rounded-2xl bg-green-600 text-[17px] font-extrabold text-white cursor-pointer hover:bg-green-700"
+              className="h-14 w-full rounded-2xl bg-green-600 text-[17px] font-extrabold text-white cursor-pointer hover:bg-green-700"
             >
               Complete ride
             </button>
