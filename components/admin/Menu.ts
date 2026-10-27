@@ -1,7 +1,8 @@
-import { LayoutDashboard, Users, CarTaxiFront, UserCircle, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Users, CarTaxiFront, UserCircle, BarChart3, MapPin } from "lucide-react";
 
 export const ADMIN_MENU = [
   { title: "Dashboard", icon: LayoutDashboard, href: "/admin" },
+  { title: "Live map", icon: MapPin, href: "/admin/live" },
   { title: "Drivers", icon: UserCircle, href: "/admin/drivers" },
   { title: "Customers", icon: Users, href: "/admin/customers" },
   { title: "Rides", icon: CarTaxiFront, href: "/admin/rides" },
