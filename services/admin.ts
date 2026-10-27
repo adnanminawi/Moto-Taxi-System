@@ -54,3 +54,6 @@ export async function logout() {
   const res = await api.post("/admin/logout");
   return res.data;
 }
+export async function forceOffline(driverId: number): Promise<void> {
+  await api.post(`/admin/drivers/${driverId}/offline`);
+}
